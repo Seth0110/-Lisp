@@ -10,4 +10,4 @@ main: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -f lisp *.o
+	rm -f main *.o

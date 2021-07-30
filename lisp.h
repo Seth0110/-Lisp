@@ -32,5 +32,7 @@ lisp *evlis(lisp *, lisp *);
 lisp *eval(lisp *, lisp *);
 void showLisp(lisp *);
 int length(lisp *);
+lisp *nth(lisp *, int);
+void prettyPrint(lisp *);
 
 #endif

@@ -146,7 +146,7 @@ lisp *pairlis(lisp *x, lisp *y, lisp *a)
 
 lisp *assoc(lisp *x, lisp *a)
 {
-  if (ltoi(equal(car(a), x)))
+  if (ltoi(equal(caar(a), x)))
     return car(a);
   else
     return assoc(x, cdr(a));
@@ -180,6 +180,8 @@ lisp *apply(lisp *fn, lisp *x, lisp *a)
   } else if (!atomcmp(car(fn), "LABEL")) {
     return apply(caddr(fn), x, cons(cons(cadr(fn),
 					 caddr(fn)), a));
+  } else {
+    return eval(fn, a);
   }
 }
 
@@ -202,15 +204,17 @@ lisp *evlis(lisp *m, lisp *a)
 
 lisp *eval(lisp *e, lisp *a)
 {
-  if (ltoi(atom(e))) {
-    return cdr(assoc(e, a));
-  } else if (ltoi(null(atom(car(e))))) {
-    if (!atomcmp(car(e), "QUOTE"))
+  if (ltoi(atom(e))) { return cdr(assoc(e, a)); }
+  else if (ltoi(atom(car(e)))) {
+    if (!atomcmp(car(e), "QUOTE")) {
       return cadr(e);
-    else if (!atomcmp(car(e), "COND"))
+    } else if (!atomcmp(car(e), "COND")) {
       return evcon(cdr(e), a);
-    else
+    } else {
       return apply(car(e), evlis(cdr(e), a), a);
+    }
+  } else {
+    return apply(car(e), evlis(cdr(e), a), a);
   }
 }
 
@@ -233,5 +237,31 @@ void showLisp (lisp *l)
     putchar(' ');
     showLisp(cdr(l));
     putchar(')');
+  }
+}
+
+lisp *nth(lisp *l, int i) {
+  if (i == 0)
+    return car(l);
+  else
+    return nth(cdr(l), --i);
+}
+
+void prettyPrint(lisp *l) {
+  if (l == NULL) {
+    printf("Tried to print a null lisp!");
+  } else {
+    if (ltoi(atom(l))) {
+      printf("%s", l->atom);
+    } else {
+      putchar('(');
+      int len = length(l);
+      for (int i = 0; i < len; i++) {
+	prettyPrint(nth(l, i));
+	if (i+1 != len)
+	  putchar(' ');
+      }
+      putchar(')');
+    }
   }
 }
