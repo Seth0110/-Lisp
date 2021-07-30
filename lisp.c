@@ -13,10 +13,8 @@
 void freeLisp (lisp *l)
 {
   if (l != NULL) {
-    if (l->atom != NULL) {
-      printf("Free: %s\n", l->atom);
+    if (l->atom != NULL)
       free(l->atom);
-    }
     if (l->fst != NULL)
       freeLisp(l->fst);
     if (l->snd != NULL)
@@ -49,7 +47,7 @@ lisp *cdr(lisp *l)
 lisp *mkAtom(char *val)
 {
   lisp *l = malloc(sizeof(lisp));
-  l->atom = malloc(sizeof(char)*30);
+  l->atom = malloc(sizeof(char)*(strlen(val)+1));
   l->fst = NULL;
   l->snd = NULL;
   strcpy(l->atom, val);
@@ -67,7 +65,7 @@ int ltoi(lisp *l)
     i = 0;
   else
     i = 1;
-  free(l);
+  freeLisp(l);
   return i;
 }
 
@@ -91,8 +89,14 @@ lisp *atom(lisp *l)
 lisp *null(lisp *l)
 {
   lisp *nil = mkAtom("NIL");
-  lisp *result = eq(l, nil);
-  free(nil);
+  lisp *result;
+
+  if (l->atom == NULL)
+    result = mkAtom("F");
+  else
+    result = eq(l, nil);
+
+  freeLisp(nil);
   return result;
 }
 
@@ -122,8 +126,9 @@ lisp *caddr(lisp *l)
 }
 
 lisp *equal(lisp *x, lisp *y) {
-  if (ltoi(atom(x)) && ltoi(atom(y)))
+  if (ltoi(atom(x)) && ltoi(atom(y))) {
     return eq(x, y);
+  }
   else if (ltoi(equal(car(x), car(y))))
     return equal(cdr(x), cdr(y));
   else
@@ -149,7 +154,10 @@ lisp *assoc(lisp *x, lisp *a)
 
 lisp *evalquote(lisp *fn, lisp *x)
 {
-  apply(fn, x, mkAtom("NIL"));
+  lisp *nil = mkAtom("NIL");
+  lisp *result = apply(fn, x, nil);
+  freeLisp(nil);
+  return result;
 }
 
 lisp *apply(lisp *fn, lisp *x, lisp *a)
@@ -204,6 +212,13 @@ lisp *eval(lisp *e, lisp *a)
     else
       return apply(car(e), evlis(cdr(e), a), a);
   }
+}
+
+int length(lisp *l) {
+  if (ltoi(null(l)))
+    return 0;
+  else
+    return 1 + length(cdr(l));
 }
 
 void showLisp (lisp *l)

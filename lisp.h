@@ -31,5 +31,6 @@ lisp *evcon(lisp *, lisp *);
 lisp *evlis(lisp *, lisp *);
 lisp *eval(lisp *, lisp *);
 void showLisp(lisp *);
+int length(lisp *);
 
 #endif

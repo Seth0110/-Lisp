@@ -2,26 +2,6 @@
 
 #include "lisp.h"
 
-void showLispFancy(lisp *l)
-{ /* Currently displays the ) right, but can't get ( working
-   *  A -> A
-   * (A (B NIL)) -> (A B)
-   * (A ((B C) NIL)) -> (A (B C))
-   */
-  if (l->atom != NULL)
-    if (atomcmp(l, "NIL"))
-      printf("%s", l->atom);
-    else
-      putchar(')');
-
-  if (l->fst != NULL) {
-    putchar('(');
-    if (car(l)->atom != NULL)
-      showLisp(car(l));
-    showLisp(cdr(l));
-  }
-}
-
 void testEq()
 {
   lisp *f = mkAtom("EQ");
@@ -38,9 +18,9 @@ void testEq()
   showLisp(result);
   puts("");
 
-  freeLisp(result);
-  freeLisp(f);
   freeLisp(args);
+  freeLisp(f);
+  freeLisp(result);
 }
 
 void testCar() {
@@ -56,11 +36,13 @@ void testCar() {
   showLisp(args);
   puts("");
 
-  showLisp(evalquote(f, args));
+  lisp *result = evalquote(f, args);
+  showLisp(result);
   puts("");
 
-  freeLisp(f);
   freeLisp(args);
+  freeLisp(f);
+  // freeLisp(result);
 }
 
 void testCdr() {
@@ -80,13 +62,18 @@ void testCdr() {
   showLisp(result);
   puts("");
 
-  freeLisp(f);
   freeLisp(args);
+  freeLisp(f);
+  // freeLisp(result);
 }
 
 void testCons() {
   lisp *f = mkAtom("CONS");
-  lisp *args = cons(mkAtom("T"), cons(mkAtom("F"), mkAtom("NIL")));
+  lisp *args = cons(mkAtom("A"),
+		    cons(cons(mkAtom("B"),
+			      cons(mkAtom("C"),
+				   mkAtom("NIL"))),
+			 mkAtom("NIL")));
 
   printf("Test: ");
   showLisp(f);
@@ -98,7 +85,9 @@ void testCons() {
   showLisp(result);
   puts("");
 
-  freeLisp(result);
+  freeLisp(args);
+  freeLisp(f);
+  // freeLisp(result);
 }
 
 void testAtom() {
@@ -115,8 +104,8 @@ void testAtom() {
   showLisp(result);
   puts("");
 
-  freeLisp(f);
   freeLisp(args);
+  freeLisp(f);
   freeLisp(result);
 }
 
@@ -126,7 +115,7 @@ int main(int argc, char **argv)
   // testCdr();
   // testCons();
   // testAtom();
-  testEq();
+  // testEq();
 
   return 0;
 }
