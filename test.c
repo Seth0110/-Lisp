@@ -3,27 +3,6 @@
 
 #include "lisp.h"
 
-#define NIL mkAtom("NIL")
-#define CONS mkAtom("CONS")
-#define CAR mkAtom("CAR")
-#define CDR mkAtom("CDR")
-#define ATOM mkAtom("ATOM")
-#define EQ mkAtom("EQ")
-#define LAMBDA mkAtom("LAMBDA")
-#define LABEL mkAtom("LABEL")
-#define QUOTE mkAtom("QUOTE")
-#define COND mkAtom("COND")
-
-#define A mkAtom("A")
-#define B mkAtom("B")
-#define C mkAtom("C")
-#define D mkAtom("D")
-#define T mkAtom("T")
-#define F mkAtom("F")
-#define FF mkAtom("FF")
-#define X mkAtom("X")
-#define Y mkAtom("Y")
-
 lisp *mkLisp(char **v, int size) {
   lisp *l = NIL;
 

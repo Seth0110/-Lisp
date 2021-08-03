@@ -1,12 +1,15 @@
 CC=gcc
-CFLAGS=-I. -lm -g
+CFLAGS=-I. -lm -ledit -g
 DEPS=lisp.h
-OBJ=main.o lisp.o
+OBJ=test.o lisp.o repl.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-main: $(OBJ)
+repl: repl.o lisp.o
+	$(CC) -o $@ $^ $(CFLAGS)
+
+test: test.o lisp.o
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
