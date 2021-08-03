@@ -8,30 +8,34 @@
 #include <lisp.h>
 
 /* Parse an S-Expression */
-lisp *parse(char *s) {
-  lisp *l = NIL;
-  int i = 0;
-  while (i < strlen(s)) {
-    if (s[i] == '(') {
-      l = cons(parse(s+i-1), l);
-    } else if (s[i] == ')') {
-      return NIL;
-    } else if (s[i] == ' ') {
-      ;
-    } else if (isalnum(s[i])) {
+lisp *parse(char *s, int *i) {
+  lisp *l = NULL;
+
+  while (*i < strlen(s)) {
+    if (s[*i] == '(') {
+      (*i)++;
+      l = cons(l, parse(s, i));
+    } else if (s[*i] == ')') {
+      return cons(l, NIL);
+    } else if (s[*i] == ' ') {
+      (*i)++;
+      l = cons(l, parse(s, i));
+    } else if (isalnum(s[*i])) {
       char *astr = calloc(sizeof(char), 1);
-      while (isalnum(s[i])) {
+      while (isalnum(s[*i])) {
 	astr = realloc(astr, strlen(astr)+1);
-	astr[strlen(astr)] = s[i];
+	astr[strlen(astr)] = s[*i];
 	astr[strlen(astr)+1] = '\0';
-	i++;
+	(*i)++;
       }
+      (*i)--;
       lisp *atom = mkAtom(astr);
-      l = cons(atom, l);
+      l = cons(l, atom);
     } else {
       puts("Invalid character detected!");
+      (*i)++;
     }
-    i++;
+    (*i)++;
   }
   return l;
 }
@@ -47,12 +51,27 @@ int main(int argc, char **argv)
     add_history(input);
 
     lisp *l;
-    l = parse(input);
-    showLisp(l);
-    puts("");
+    int *i = malloc(sizeof(int));
+    *i = 0;
+    l = parse(input, i);
+
+    /* printf(";; "); */
+    /* showLisp(l); */
+    /* puts(""); */
+    
+    /* printf(";; "); */
+    /* prettyPrint(l); */
+    /* puts(""); */
+
+    printf(";; ");
     prettyPrint(l);
     puts("");
+    
+    /* l = evalquote(car(l), cdr(l)); */
+    /* prettyPrint(l); */
+    /* puts(""); */
 
+    free(i);
     freeLisp(l);
     free(input);
   }

@@ -26,9 +26,15 @@ void freeLisp (lisp *l)
 lisp *cons(lisp *a, lisp *b)
 {
   lisp *l = malloc(sizeof(lisp));
-  l->atom = NULL;
-  l->fst = a;
-  l->snd = b;
+  if (a == NULL) {
+    l = b; 
+  } else if (b == NULL) {
+    l = a;
+  } else {
+    l->atom = NULL;
+    l->fst = a;
+    l->snd = b;
+  }
   return l;
 }
 
@@ -61,7 +67,7 @@ int atomcmp(lisp *l, char *s) {
 int ltoi(lisp *l)
 {
   int i;
-  if (!atomcmp(l, "F"))
+  if (!atomcmp(l, "f"))
     i = 0;
   else
     i = 1;
@@ -73,26 +79,26 @@ int ltoi(lisp *l)
 lisp *eq(lisp *a, lisp *b)
 {
   if (!strcmp(a->atom, b->atom))
-    return mkAtom("T");
+    return mkAtom("t");
   else
-    return mkAtom("F");
+    return mkAtom("f");
 }
 
 lisp *atom(lisp *l)
 {
   if (l->atom != NULL)
-    return mkAtom("T");
+    return mkAtom("t");
   else
-    return mkAtom("F");
+    return mkAtom("f");
 }
 
 lisp *null(lisp *l)
 {
-  lisp *nil = mkAtom("NIL");
+  lisp *nil = mkAtom("nil");
   lisp *result;
 
   if (l->atom == NULL)
-    result = mkAtom("F");
+    result = mkAtom("f");
   else
     result = eq(l, nil);
 
@@ -132,7 +138,7 @@ lisp *equal(lisp *x, lisp *y) {
   else if (ltoi(equal(car(x), car(y))))
     return equal(cdr(x), cdr(y));
   else
-    return mkAtom("F");
+    return mkAtom("f");
 }
 
 lisp *pairlis(lisp *x, lisp *y, lisp *a)
@@ -154,7 +160,7 @@ lisp *assoc(lisp *x, lisp *a)
 
 lisp *evalquote(lisp *fn, lisp *x)
 {
-  lisp *nil = mkAtom("NIL");
+  lisp *nil = mkAtom("nil");
   lisp *result = apply(fn, x, nil);
   freeLisp(nil);
   return result;
@@ -163,26 +169,26 @@ lisp *evalquote(lisp *fn, lisp *x)
 lisp *apply(lisp *fn, lisp *x, lisp *a)
 {
   if (ltoi(atom(fn))) {
-    if (!atomcmp(fn, "CAR"))
+    if (!atomcmp(fn, "car"))
       return caar(x);
-    else if (!atomcmp(fn, "CDR"))
+    else if (!atomcmp(fn, "cdr"))
       return cdar(x);
-    else if (!atomcmp(fn, "CONS"))
+    else if (!atomcmp(fn, "cons"))
       return cons(car(x), cadr(x));
-    else if (!atomcmp(fn, "ATOM"))
+    else if (!atomcmp(fn, "atom"))
       return atom(car(x));
-    else if (!atomcmp(fn, "EQ"))
+    else if (!atomcmp(fn, "eq"))
       return eq(car(x), cadr(x));
     else
       return apply(eval(fn, a), x, a);
-  } else if (!atomcmp(car(fn), "LAMBDA")) {
+  } else if (!atomcmp(car(fn), "lambda")) {
     return eval(caddr(fn), pairlis(cadr(fn), x, a));
-  } else if (!atomcmp(car(fn), "LABEL")) {
+  } else if (!atomcmp(car(fn), "label")) {
     return apply(caddr(fn), x, cons(cons(cadr(fn),
 					 caddr(fn)), a));
-  } else {
-    return eval(fn, a);
-  }
+  } /* else { */
+  /*   return eval(fn, a); */
+  /* } */
 }
 
 lisp *evcon(lisp *c, lisp *a)
@@ -206,9 +212,9 @@ lisp *eval(lisp *e, lisp *a)
 {
   if (ltoi(atom(e))) { return cdr(assoc(e, a)); }
   else if (ltoi(atom(car(e)))) {
-    if (!atomcmp(car(e), "QUOTE")) {
+    if (!atomcmp(car(e), "quote")) {
       return cadr(e);
-    } else if (!atomcmp(car(e), "COND")) {
+    } else if (!atomcmp(car(e), "cond")) {
       return evcon(cdr(e), a);
     } else {
       return apply(car(e), evlis(cdr(e), a), a);
@@ -234,7 +240,7 @@ void showLisp (lisp *l)
     showLisp(car(l));
   }
   if (l->snd != NULL) {
-    putchar(' ');
+    printf(" . ");
     showLisp(cdr(l));
     putchar(')');
   }
@@ -258,7 +264,7 @@ void prettyPrint(lisp *l) {
       int len = length(l);
       for (int i = 0; i < len; i++) {
 	prettyPrint(nth(l, i));
-	if (i+1 != len)
+	if (i+1 < len)
 	  putchar(' ');
       }
       putchar(')');

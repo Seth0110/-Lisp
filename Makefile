@@ -13,4 +13,4 @@ test: test.o lisp.o
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -f main *.o
+	rm -f test repl *.o

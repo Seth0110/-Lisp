@@ -225,15 +225,15 @@ void testCond() {
 
 int main(int argc, char **argv)
 {
-  /* testCar(); */
-  /* testCdr(); */
-  /* testCons(); */
-  /* testAtom(); */
-  /* testEq(); */
-  /* testLambda(); */
-  /* testLabel(); */
-  /* testQuote(); */
-  testCond();
+  testCar();
+  testCdr();
+  testCons();
+  testAtom();
+  testEq();
+  testLambda();
+  testLabel();
+  testQuote();
+  // testCond();
 
   return 0;
 }
