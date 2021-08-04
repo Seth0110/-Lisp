@@ -13,7 +13,7 @@ lisp *mkLisp(char **v, int size) {
 }
 
 lisp *mkTestLisp() {
-  char *v[4] = { "A", "B", "C" };
+  char *v[4] = { "a", "b", "c" };
   lisp *l = mkLisp((char **) v, 3);
 
   return l;
@@ -223,6 +223,23 @@ void testCond() {
   freeLisp(result);
 }
 
+void testDisplay() {
+  lisp *l = cons(mkAtom("a"),
+		 cons(cons(mkAtom("b"),
+			   cons(mkAtom("c"),
+				cons(mkAtom("d"),
+				     NIL))),
+		      cons(mkAtom("e"),
+			   NIL)));
+
+  puts("Test: Display");
+  showLisp(l);
+  puts("");
+  prettyPrint(l);
+  puts("");
+  freeLisp(l);
+}
+
 int main(int argc, char **argv)
 {
   testCar();
@@ -232,8 +249,10 @@ int main(int argc, char **argv)
   testEq();
   testLambda();
   testLabel();
-  testQuote();
+  // testQuote();
   // testCond();
 
+  testDisplay();
+  
   return 0;
 }

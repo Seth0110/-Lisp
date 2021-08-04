@@ -7,10 +7,28 @@
 
 #include <lisp.h>
 
+lisp *parseAtom(char *s, int *i)
+{
+  char *astr = calloc(sizeof(char), 1);
+
+  while (isalnum(s[*i])) {
+    astr = realloc(astr, strlen(astr)+1);
+    astr[strlen(astr)] = s[*i];
+    astr[strlen(astr)+1] = '\0';
+    (*i)++;
+  }
+  (*i)--;
+
+  lisp *a = mkAtom(astr);
+  free(astr);
+  
+  return a;
+}
+
 /* Parse an S-Expression */
 lisp *parse(char *s, int *i) {
   lisp *l = NULL;
-
+  
   while (*i < strlen(s)) {
     if (s[*i] == '(') {
       (*i)++;
@@ -21,16 +39,7 @@ lisp *parse(char *s, int *i) {
       (*i)++;
       l = cons(l, parse(s, i));
     } else if (isalnum(s[*i])) {
-      char *astr = calloc(sizeof(char), 1);
-      while (isalnum(s[*i])) {
-	astr = realloc(astr, strlen(astr)+1);
-	astr[strlen(astr)] = s[*i];
-	astr[strlen(astr)+1] = '\0';
-	(*i)++;
-      }
-      (*i)--;
-      lisp *atom = mkAtom(astr);
-      l = cons(l, atom);
+      l = cons(l, parseAtom(s, i));
     } else {
       puts("Invalid character detected!");
       (*i)++;
@@ -55,18 +64,14 @@ int main(int argc, char **argv)
     *i = 0;
     l = parse(input, i);
 
-    /* printf(";; "); */
-    /* showLisp(l); */
-    /* puts(""); */
+    printf(";; ");
+    showLisp(l);
+    puts("");
     
-    /* printf(";; "); */
-    /* prettyPrint(l); */
-    /* puts(""); */
-
     printf(";; ");
     prettyPrint(l);
     puts("");
-    
+
     /* l = evalquote(car(l), cdr(l)); */
     /* prettyPrint(l); */
     /* puts(""); */
@@ -74,6 +79,7 @@ int main(int argc, char **argv)
     free(i);
     freeLisp(l);
     free(input);
+
   }
 
   return 0;
