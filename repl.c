@@ -28,25 +28,40 @@ lisp *parseAtom(char *s, int *i)
 /* Parse an S-Expression */
 lisp *parse(char *s, int *i) {
   lisp *l = NULL;
-  
+
   while (*i < strlen(s)) {
-    if (s[*i] == '(') {
-      (*i)++;
-      l = cons(l, parse(s, i));
+    if (isalnum(s[*i])) {
+      l = append(l, parseAtom(s, i));
     } else if (s[*i] == ')') {
-      return cons(l, NIL);
-    } else if (s[*i] == ' ') {
-      (*i)++;
-      l = cons(l, parse(s, i));
-    } else if (isalnum(s[*i])) {
-      l = cons(l, parseAtom(s, i));
-    } else {
-      puts("Invalid character detected!");
-      (*i)++;
+      return append(l, NIL);
+    } else if (s[*i] == '(') {
+      ++*i;
+      l = append(l, parse(s, i));
     }
-    (*i)++;
+    ++*i;
   }
+
   return l;
+}
+
+lisp *parse2(char *s, int *i)
+{
+  if (isalnum(s[*i])) {
+    return parseAtom(s, i);
+  } else if (s[*i] == ')') {
+    ++*i;
+    return NIL;
+  } else if (s[*i] == '(') {
+    ++*i;
+    lisp *l = parse2(s, i);
+    if (ltoi(eq(l, NIL)))
+      return l;
+    else
+      return cons(l, parse2(s, i));
+  } else {
+    ++*i;
+    return parse2(s, i);
+  }
 }
 
 int main(int argc, char **argv)
@@ -62,7 +77,7 @@ int main(int argc, char **argv)
     lisp *l;
     int *i = malloc(sizeof(int));
     *i = 0;
-    l = parse(input, i);
+    l = parse2(input, i);
 
     printf(";; ");
     showLisp(l);

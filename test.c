@@ -224,13 +224,18 @@ void testCond() {
 }
 
 void testDisplay() {
-  lisp *l = cons(mkAtom("a"),
-		 cons(cons(mkAtom("b"),
-			   cons(mkAtom("c"),
-				cons(mkAtom("d"),
-				     NIL))),
-		      cons(mkAtom("e"),
-			   NIL)));
+  /* lisp *l = cons(mkAtom("a"), */
+  /* 		 cons(cons(mkAtom("b"), */
+  /* 			   cons(mkAtom("c"), */
+  /* 				cons(mkAtom("d"), */
+  /* 				     NIL))), */
+  /* 		      cons(mkAtom("e"), */
+  /* 			   NIL))); */
+  lisp *l = cons(cons(mkAtom("a"),
+		      cons(mkAtom("b"),
+			   NIL)),
+		 NIL);
+		 
 
   puts("Test: Display");
   showLisp(l);
@@ -242,13 +247,13 @@ void testDisplay() {
 
 int main(int argc, char **argv)
 {
-  testCar();
-  testCdr();
-  testCons();
-  testAtom();
-  testEq();
-  testLambda();
-  testLabel();
+  /* testCar(); */
+  /* testCdr(); */
+  /* testCons(); */
+  /* testAtom(); */
+  /* testEq(); */
+  /* testLambda(); */
+  /* testLabel(); */
   // testQuote();
   // testCond();
 

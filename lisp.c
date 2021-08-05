@@ -38,6 +38,19 @@ lisp *cons(lisp *a, lisp *b)
   return l;
 }
 
+lisp *append(lisp *a, lisp *b)
+{
+  if (a != NULL) {
+    if (a->atom != NULL) {
+      return cons(a, b);
+    } else {
+      return cons(car(a), append(cdr(a), b));
+    }
+  } else {
+    return b;
+  }
+}
+
 /* Undefined for Atom */
 lisp *car(lisp *l)
 {
