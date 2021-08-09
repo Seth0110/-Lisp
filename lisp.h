@@ -9,7 +9,6 @@ typedef struct Lisp {
 
 void freeLisp(lisp *);
 lisp *cons(lisp *, lisp *);
-lisp *append(lisp *, lisp *);
 lisp *car(lisp *);
 lisp *cdr(lisp *);
 lisp *mkAtom(char *);

@@ -17,50 +17,36 @@ lisp *parseAtom(char *s, int *i)
     astr[strlen(astr)+1] = '\0';
     (*i)++;
   }
-  (*i)--;
 
   lisp *a = mkAtom(astr);
   free(astr);
-  
+
   return a;
 }
 
 /* Parse an S-Expression */
 lisp *parse(char *s, int *i) {
-  lisp *l = NULL;
-
-  while (*i < strlen(s)) {
+  if (*i < strlen(s)) {
     if (isalnum(s[*i])) {
-      l = append(l, parseAtom(s, i));
-    } else if (s[*i] == ')') {
-      return append(l, NIL);
+      lisp *a = parseAtom(s, i);
+      lisp *b = parse(s, i);
+      return cons(a, b);
     } else if (s[*i] == '(') {
       ++*i;
-      l = append(l, parse(s, i));
+      lisp *a = parse(s, i);
+      ++*i;
+      lisp *b = parse(s, i);
+      return cons(a, b);
+    } else if (s[*i] == ')') {
+      return NIL;
+    } else if (s[*i] == ' ') {
+      ++*i;
+      return parse(s, i);
+    } else {
+      return NULL;
     }
-    ++*i;
-  }
-
-  return l;
-}
-
-lisp *parse2(char *s, int *i)
-{
-  if (isalnum(s[*i])) {
-    return parseAtom(s, i);
-  } else if (s[*i] == ')') {
-    ++*i;
-    return NIL;
-  } else if (s[*i] == '(') {
-    ++*i;
-    lisp *l = parse2(s, i);
-    if (ltoi(eq(l, NIL)))
-      return l;
-    else
-      return cons(l, parse2(s, i));
   } else {
-    ++*i;
-    return parse2(s, i);
+    return NULL;
   }
 }
 
@@ -71,30 +57,20 @@ int main(int argc, char **argv)
 
   while (1) {
     char *input = readline("> ");
-    
+
     add_history(input);
 
-    lisp *l;
-    int *i = malloc(sizeof(int));
-    *i = 0;
-    l = parse2(input, i);
+    lisp *l = NULL;
+    int *i = calloc(1, sizeof(int));
+    l = parse(input, i);
 
-    printf(";; ");
-    showLisp(l);
-    puts("");
-    
-    printf(";; ");
+    l = evalquote(car(l), cdr(l));
     prettyPrint(l);
     puts("");
-
-    /* l = evalquote(car(l), cdr(l)); */
-    /* prettyPrint(l); */
-    /* puts(""); */
 
     free(i);
     freeLisp(l);
     free(input);
-
   }
 
   return 0;
