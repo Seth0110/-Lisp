@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-I. -lm -ledit -g
 DEPS=lisp.h
-OBJ=test.o lisp.o repl.o
+OBJ=lisp.o repl.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -9,8 +9,5 @@ OBJ=test.o lisp.o repl.o
 repl: repl.o lisp.o
 	$(CC) -o $@ $^ $(CFLAGS)
 
-test: test.o lisp.o
-	$(CC) -o $@ $^ $(CFLAGS)
-
 clean:
-	rm -f test repl *.o
+	rm -f repl *.o

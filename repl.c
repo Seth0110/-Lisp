@@ -52,8 +52,8 @@ lisp *parse(char *s, int *i) {
 
 int main(int argc, char **argv)
 {
-  puts("µLisp v0.0.1");
-  puts("C-c to exit");
+  fputs("µLisp v0.0.1\n", stderr);
+  fputs("C-c to exit\n", stderr);
 
   while (1) {
     char *input = readline("> ");

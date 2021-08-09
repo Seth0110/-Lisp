@@ -1,0 +1,6 @@
+(car (a b))
+(cdr (a b))
+(cons a (b))
+(eq a a)
+(atom a)
+((lambda (x) (car x)) (a b))
