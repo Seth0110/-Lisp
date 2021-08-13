@@ -1,12 +1,12 @@
 CC=gcc
 CFLAGS=-I. -lm -ledit -g
-DEPS=lisp.h
-OBJ=lisp.o repl.o
+DEPS=ulisp.h
+OBJ=ulisp.o repl.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-repl: repl.o lisp.o
+repl: repl.o ulisp.o
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:

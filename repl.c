@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <lisp.h>
+#include "ulisp.h"
 
 lisp *parseAtom(char *s, int *i)
 {
@@ -38,7 +38,7 @@ lisp *parse(char *s, int *i) {
       lisp *b = parse(s, i);
       return cons(a, b);
     } else if (s[*i] == ')') {
-      return NIL;
+      return mkAtom("nil");
     } else if (s[*i] == ' ') {
       ++*i;
       return parse(s, i);
@@ -57,6 +57,8 @@ int main(int argc, char **argv)
 
   while (1) {
     char *input = readline("> ");
+    if (!input)
+      break;
 
     add_history(input);
 
@@ -64,7 +66,7 @@ int main(int argc, char **argv)
     int *i = calloc(1, sizeof(int));
     l = parse(input, i);
 
-    l = evalquote(car(l), cdr(l));
+    l = eval(l, mkAtom("nil"));
     prettyPrint(l);
     puts("");
 
