@@ -1,0 +1,6 @@
+(car (quote (a b)))
+(cdr (quote (a b)))
+(cons (quote a) (quote (b)))
+(eq (quote a) (quote a))
+(atom (quote a))
+;; ((lambda (x) (atom x)) (quote a))
