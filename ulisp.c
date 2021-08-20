@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "ulisp.h"
 
@@ -30,16 +31,14 @@
  * set-car!        -> set_car_i
  */
 
-char *primitive_procedures[6] = { "car", "cdr", "cons", "atom", "eq", "null" };
-
 void freeLisp (lisp *l)
 {
-  if (l != NULL) {
-    if (l->atom != NULL)
+  if (l) {
+    if (l->atom)
       free(l->atom);
-    if (l->fst != NULL)
+    if (l->fst)
       freeLisp(l->fst);
-    if (l->snd != NULL)
+    if (l->snd)
       freeLisp(l->snd);
     free(l);
   }
@@ -48,9 +47,9 @@ void freeLisp (lisp *l)
 lisp *cons(lisp *a, lisp *b)
 {
   lisp *l = malloc(sizeof(lisp));
-  if (a == NULL) {
+  if (!a) {
     l = b; 
-  } else if (b == NULL) {
+  } else if (!b) {
     l = a;
   } else {
     l->atom = NULL;
@@ -62,7 +61,7 @@ lisp *cons(lisp *a, lisp *b)
 
 lisp *append(lisp *list1, lisp *list2)
 {
-  if (list1 == NULL)
+  if (!list1)
     return list2;
   else
     return cons(car(list1), append(cdr(list1), list2));
@@ -87,9 +86,34 @@ lisp *list(int argc, ...)
   return l;
 }
 
+lisp *to_list(lisp *l)
+{
+  if (is_null(l))
+    return mkAtom("nil");
+  else
+    return cons(car(l),
+		to_list(cdr(l)));
+}
+
 lisp *primitive_procedures_list()
 {
-  return list(6, mkAtom("car"), mkAtom("cdr"), mkAtom("cons"), mkAtom("atom"), mkAtom("eq"), mkAtom("null"));
+  return list(15,
+	      mkAtom("car"),
+	      mkAtom("cdr"),
+	      mkAtom("cons"),
+	      mkAtom("atom?"),
+	      mkAtom("eq?"),
+	      mkAtom("null?"),
+	      mkAtom("+"),
+	      mkAtom("-"),
+	      mkAtom("*"),
+	      mkAtom("/"),
+	      mkAtom("remainder"),
+	      mkAtom("="),
+	      mkAtom(">"),
+	      mkAtom("<"),
+	      mkAtom("list")
+	      );
 }
 
 /* Undefined for Atom */
@@ -108,16 +132,25 @@ void set_cdr_i(lisp *x, lisp *y)
   *x = *(cons(car(x), y));
 }
 
-int is_eq(lisp *a, char *b) {
-  if (a && a->atom)
-    return !strcmp(a->atom, b);
+int is_eq_str(lisp *a, char *b)
+{
+  lisp *batom = mkAtom(b);
+  int result = is_eq(a, batom);
+  freeLisp(batom);
+  return result;
+}
+
+int is_eq(lisp *a, lisp *b)
+{
+  if (is_atom(a) && is_atom(b))
+    return !strcmp(a->atom, b->atom);
   else
     return 0;
 }
 
 int is_null(lisp *l)
 {
-  return is_eq(l, "nil");
+  return is_eq_str(l, "nil");
 }
 
 /* Undefined for Atom */
@@ -136,13 +169,14 @@ lisp *mkAtom(char *val)
   return l;
 }
 
-int atomcmp(lisp *l, char *s) {
+int atomcmp(lisp *l, char *s)
+{
   return strcmp(l->atom, s);
 }
 
 int is_false(lisp *x)
 {
-  return is_eq(x, "f");
+  return is_eq_str(x, "#f");
 }
 
 int is_true(lisp *x)
@@ -153,43 +187,18 @@ int is_true(lisp *x)
 int ltoi(lisp *l)
 {
   int i;
-  if (!atomcmp(l, "f"))
+  if (is_eq_str(l, "#f"))
     i = 0;
-  else
+  else if (is_eq_str(l, "#t"))
     i = 1;
-  freeLisp(l);
+  else
+    i = atoi(l->atom);
   return i;
 }
 
-/* Undefined for S-Expression */
-lisp *eq(lisp *a, lisp *b)
+int is_atom(lisp *l)
 {
-  if (!strcmp(a->atom, b->atom))
-    return mkAtom("t");
-  else
-    return mkAtom("f");
-}
-
-lisp *atom(lisp *l)
-{
-  if (l->atom != NULL)
-    return mkAtom("t");
-  else
-    return mkAtom("f");
-}
-
-lisp *null(lisp *l)
-{
-  lisp *nil = mkAtom("nil");
-  lisp *result;
-
-  if (l->atom == NULL)
-    result = mkAtom("f");
-  else
-    result = eq(l, nil);
-
-  freeLisp(nil);
-  return result;
+  return l->atom != NULL;
 }
 
 lisp *caar(lisp *l)
@@ -242,19 +251,19 @@ lisp *cdddr(lisp *l)
   return cdr(cdr(cdr(l)));
 }
 
-lisp *equal(lisp *x, lisp *y) {
-  if (ltoi(atom(x)) && ltoi(atom(y))) {
-    return eq(x, y);
-  }
-  else if (ltoi(equal(car(x), car(y))))
-    return equal(cdr(x), cdr(y));
+int is_equal(lisp *x, lisp *y)
+{
+  if (is_atom(x) && is_atom(y))
+    return is_eq(x, y);
+  else if (is_equal(car(x), car(y)))
+    return is_equal(cdr(x), cdr(y));
   else
-    return mkAtom("f");
+    return 0;
 }
 
 lisp *pairlis(lisp *x, lisp *y, lisp *a)
 {
-  if (x == NULL)
+  if (!x)
     return a;
   else
     return cons(cons(car(x), car(y)),
@@ -265,7 +274,7 @@ lisp *assoc(lisp *x, lisp *a)
 {
   if (!a)
     fprintf(stderr, "Undefined association: %s\n", x->atom);
-  if (ltoi(equal(caar(a), x)))
+  if (is_equal(caar(a), x))
     return car(a);
   else
     return assoc(x, cdr(a));
@@ -313,7 +322,7 @@ int is_pair(lisp *seq)
 
 int is_tagged_list(lisp *exp, char *tag)
 {
-  return is_pair(exp) && is_eq(car(exp), tag);
+  return is_pair(exp) && is_eq_str(car(exp), tag);
 }
 
 int is_if(lisp *exp)
@@ -336,7 +345,7 @@ lisp *if_alternative(lisp *exp)
   if (!is_null(cdddr(exp)))
     return cadddr(exp);
   else
-    return mkAtom("f");
+    return mkAtom("#f");
 }
 
 lisp *make_if(lisp *predicate, lisp *consequent, lisp *alternative)
@@ -364,23 +373,25 @@ lisp *eval_sequence(lisp *exps, lisp *env)
 
 lisp *eval_definition(lisp *exp, lisp *env);
 
+int is_elem(lisp *a, lisp *l)
+{
+  if (!l || !car(l))
+    return 0;
+  else if (is_atom(car(l)))
+    return is_eq(a, car(l)) || is_elem(a, cdr(l));
+  else
+    return is_elem(a, cdr(l));
+}
+
 int is_primitive_procedure(lisp *p)
 {
-  int is_prim = 0;
-  if (p && p->atom) {
-    for (int i = 0; i < 6; i++)
-      is_prim = is_prim || !strcmp(p->atom, (char *) primitive_procedures[i]);
-  }
-  return is_prim;
+  return is_elem(p, primitive_procedures_list());
 }
 
 lisp *the_empty_environment()
 {
   return mkAtom("nil");
 }
-
-void define_variable_i(lisp *var, lisp *val, lisp *env);
-lisp *extend_environment(lisp *vars, lisp *vals, lisp *base_env);
 
 lisp *setup_environment()
 {
@@ -420,20 +431,136 @@ lisp *procedure_environment(lisp *p)
   return cadddr(p);
 }
 
+int plus(lisp *l)
+{
+  if (is_null(l))
+    return 0;
+  else
+    return ltoi(car(l)) + plus(cdr(l));
+}
+
+int subtract(lisp *l)
+{
+  if (is_null(l))
+    return 0;
+  else
+    return ltoi(car(l)) - subtract(cdr(l));
+}
+
+int minus(lisp *l)
+{
+  if (length(l) == 1)
+    return 0 - ltoi(car(l));
+  else
+    return subtract(l);
+}
+
+int multiply(lisp *l)
+{
+  if (is_null(l))
+    return 1;
+  else
+    return ltoi(car(l)) * multiply(cdr(l));
+}
+
+int divide(lisp *l)
+{
+  if (is_null(l))
+    return 1;
+  else
+    return ltoi(car(l)) / divide(cdr(l));
+}
+
+int rem(lisp *x, lisp *y)
+{
+  return ltoi(x) % ltoi(y);
+}
+
+lisp *num_eq(lisp *l)
+{
+  int val = ltoi(car(l));
+  int i = 1;
+  while (i < length(l)) {
+    if (ltoi(nth(l, i)) != val)
+      return mkAtom("#f");
+    i++;
+  }
+  return mkAtom("#t");
+}
+
+lisp *num_gt(lisp *l)
+{
+  int val = ltoi(car(l));
+  int i = 1;
+  while (i < length(l)) {
+    if (ltoi(nth(l, i)) >= val)
+      return mkAtom("#f");
+    val = ltoi(nth(l, i));
+    i++;
+  }
+  return mkAtom("#t");
+}
+
+lisp *num_lt(lisp *l)
+{
+  int val = ltoi(car(l));
+  int i = 1;
+  while (i < length(l)) {
+    if (ltoi(nth(l, i)) <= val)
+      return mkAtom("#f");
+    val = ltoi(nth(l, i));
+    i++;
+  }
+  return mkAtom("#t");
+}
+
+lisp *itol(int i)
+{
+  char s[12];
+  sprintf(s, "%d", i);
+  return mkAtom(s);
+}
+
+lisp *btol(int b)
+{
+  if (b)
+    return mkAtom("#t");
+  else
+    return mkAtom("#f");
+}
+
 lisp *apply_primitive_procedure(lisp *procedure, lisp *arguments)
 {
-  if (is_eq(procedure, "car"))
+  if (is_eq_str(procedure, "car"))
     return car(car(arguments));
-  else if (is_eq(procedure, "cdr"))
+  else if (is_eq_str(procedure, "cdr"))
     return cdr(car(arguments));
-  else if (is_eq(procedure, "cons"))
+  else if (is_eq_str(procedure, "cons"))
     return cons(car(arguments), cadr(arguments));
-  else if (is_eq(procedure, "atom"))
-    return atom(car(arguments));
-  else if (is_eq(procedure, "eq"))
-    return eq(car(arguments), cadr(arguments));
-  else if (is_eq(procedure, "null"))
-    return null(car(arguments));
+  else if (is_eq_str(procedure, "atom?"))
+    return btol(is_atom(car(arguments)));
+  else if (is_eq_str(procedure, "eq?"))
+    return btol(is_eq(car(arguments), cadr(arguments)));
+  else if (is_eq_str(procedure, "null?"))
+    return btol(is_null(car(arguments)));
+  else if (is_eq_str(procedure, "+"))
+    return itol(plus(arguments));
+  else if (is_eq_str(procedure, "-"))
+    return itol(minus(arguments));
+  else if (is_eq_str(procedure, "*"))
+    return itol(multiply(arguments));
+  else if (is_eq_str(procedure, "/"))
+    return itol(divide(arguments));
+  else if (is_eq_str(procedure, "remainder"))
+    return itol(rem(car(arguments), cadr(arguments)));
+  else if (is_eq_str(procedure, "="))
+    return num_eq(arguments);
+  else if (is_eq_str(procedure, ">"))
+    return num_gt(arguments);
+  else if (is_eq_str(procedure, "<"))
+    return num_lt(arguments);
+  else if (is_eq_str(procedure, "list"))
+    return to_list(arguments);
   else
     return error("Tried to apply non-primitive procedure", 2, procedure, arguments);
 }
@@ -484,7 +611,7 @@ lisp *env_scan(lisp *var, lisp *vars, lisp *vals, lisp *env);
 
 lisp *env_loop(lisp *var, lisp *env)
 {
-  if (is_eq(env, "nil")) {
+  if (is_null(env)) {
     return error("Unbound variable", 1, var);
   } else {
     lisp *frame = first_frame(env);
@@ -499,7 +626,7 @@ lisp *env_scan(lisp *var, lisp *vars, lisp *vals, lisp *env)
 {
   if (is_null(vars))
     return env_loop(var, enclosing_environment(env));
-  if (is_eq(var, car(vars)->atom))
+  if (is_eq(var, car(vars)))
     return car(vals);
   else
     return env_scan(var, cdr(vars), cdr(vals), env);
@@ -514,7 +641,7 @@ lisp *apply(lisp *procedure, lisp *arguments)
 {
   /* printf("apply : "); */
   /* prettyPrint(procedure); */
-  /* printf(" -> "); */
+  /* printf("\n      : "); */
   /* prettyPrint(arguments); */
   /* puts(""); */
   if (is_primitive_procedure(procedure))
@@ -538,7 +665,7 @@ lisp *evcon(lisp *c, lisp *a)
 
 lisp *evlis(lisp *m, lisp *a)
 {
-  if (ltoi(null(m)))
+  if (is_null(m))
     return m;
   else
     return cons(eval(car(m), a),
@@ -548,7 +675,7 @@ lisp *evlis(lisp *m, lisp *a)
 int is_symbol(lisp *e)
 {
   int isnum = 0;
-  if (e && e->atom) {
+  if (is_atom(e)) {
     isnum = 1;
     for (int i = 0; i < strlen(e->atom); i++)
       isnum = isnum && isalnum(e->atom[i]);
@@ -559,7 +686,7 @@ int is_symbol(lisp *e)
 int is_number(lisp *e)
 {
   int isnum = 0;
-  if (e && e->atom) {
+  if (is_atom(e)) {
     isnum = 1;
     for (int i = 0; i < strlen(e->atom); i++)
       isnum = isnum && isdigit(e->atom[i]);
@@ -569,7 +696,7 @@ int is_number(lisp *e)
 
 int is_string(lisp *e)
 {
-  if (e && e->atom) {
+  if (is_atom(e)) {
     char first = e->atom[0];
     char last = e->atom[strlen(e->atom)-1];
     return (first == '"' && last == '"');
@@ -628,9 +755,10 @@ lisp *definition_variable(lisp *exp)
 
 lisp *make_lambda(lisp *parameters, lisp *body)
 {
-  return cons(mkAtom("lambda"),
-	      cons(parameters,
-		   body));
+  return list(3, mkAtom("lambda"), parameters, body);
+  /* return cons(mkAtom("lambda"), */
+  /* 	      cons(parameters, */
+  /* 		   body)); */
 }
 
 lisp *definition_value(lisp *exp)
@@ -642,11 +770,9 @@ lisp *definition_value(lisp *exp)
 		       cddr(exp));
 }
 
-void def_scan(lisp *var, lisp *val, lisp *vars, lisp *vals, lisp *env);
-
 lisp *set_variable_value_i(lisp *var, lisp *val, lisp *env)
 {
-  if (is_eq(env, "nil")) {
+  if (is_null(env)) {
     error("Unbound variable -- SET!", 1, var);
   } else {
     lisp *frame = first_frame(env);
@@ -663,11 +789,11 @@ lisp *set_variable_value_i(lisp *var, lisp *val, lisp *env)
 
 void def_scan(lisp *var, lisp *val, lisp *vars, lisp *vals, lisp *frame)
 {
-  if (is_null(vars)) {
+  if (is_null(vars))
     add_binding_to_frame_i(var, val, frame);
-  } else if (is_eq(var, car(vars)->atom)) {
+  else if (is_eq(var, car(vars)))
     set_car_i(vals, val);
-  } else
+  else
     def_scan(var, val, cdr(vars), cdr(vals), frame);
 }
 
@@ -775,7 +901,7 @@ lisp *cond_predicate(lisp *clause)
 
 int is_cond_else_clause(lisp *clause)
 {
-  return is_eq(cond_predicate(clause), "else");
+  return is_eq_str(cond_predicate(clause), "else");
 }
 
 lisp *cond_actions(lisp *clause)
@@ -786,7 +912,7 @@ lisp *cond_actions(lisp *clause)
 lisp *expand_clauses(lisp *clauses)
 {
   if (is_null(clauses)) {
-    return mkAtom("f");
+    return mkAtom("#f");
   } else {
     lisp *first = car(clauses);
     lisp *rest = cdr(clauses);
@@ -832,6 +958,8 @@ lisp *eval(lisp *exp, lisp *env)
 {
   /* printf("eval  : "); */
   /* prettyPrint(exp); */
+  /* printf("\n      : "); */
+  /* prettyPrint(env); */
   /* puts(""); */
   if (is_self_evaluating(exp))
     return exp;
@@ -845,11 +973,10 @@ lisp *eval(lisp *exp, lisp *env)
     return eval_definition(exp, env);
   else if (is_if(exp))
     return eval_if(exp, env);
-  else if (is_lambda(exp)) {
+  else if (is_lambda(exp))
     return make_procedure(lambda_parameters(exp),
 			  lambda_body(exp),
 			  env);
-  }
   else if (is_begin(exp))
     return eval_sequence(begin_actions(exp), env);
   else if (is_cond(exp))
@@ -862,8 +989,9 @@ lisp *eval(lisp *exp, lisp *env)
     return error("Unknown expression type -- EVAL", 1, exp);
 }
 
-int length(lisp *l) {
-  if (ltoi(null(l)))
+int length(lisp *l)
+{
+  if (is_null(l))
     return 0;
   else
     return 1 + length(cdr(l));
@@ -871,31 +999,31 @@ int length(lisp *l) {
 
 void showLisp (lisp *l)
 {
-  if (l->atom != NULL)
+  if (is_atom(l))
     printf("%s", l->atom);
-  if (l->fst != NULL) {
+  if (l->fst) {
     putchar('(');
     showLisp(car(l));
   }
-  if (l->snd != NULL) {
+  if (l->snd) {
     printf(" . ");
     showLisp(cdr(l));
     putchar(')');
   }
 }
 
-lisp *nth(lisp *l, int i) {
+lisp *nth(lisp *l, int i)
+{
   if (i == 0)
     return car(l);
   else
     return nth(cdr(l), --i);
 }
 
-void prettyPrint(lisp *l) {
-  if (l == NULL) {
-    fputs("Tried to print a null lisp!", stderr);
-  } else {
-    if (ltoi(atom(l))) {
+void prettyPrint(lisp *l)
+{
+  if (l) {
+    if (is_atom(l)) {
       printf("%s", l->atom);
     } else {
       putchar('(');

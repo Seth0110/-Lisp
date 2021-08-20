@@ -43,18 +43,24 @@ char *help_string =
 
 int is_atom_char(char s)
 {
-  return (isalnum(s) || s == '.' || s == '"' || s == '!');
+  char *valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.\"!?+-*/=<>";
+  if (strchr(valid, s))
+    return 1;
+  else
+    return 0;
 }
 
 lisp *parseAtom(char *s, int *i)
 {
   char *astr = calloc(sizeof(char), 1);
+  int len = 0;
 
   while (is_atom_char(s[*i])) {
-    astr = realloc(astr, strlen(astr)+1);
-    astr[strlen(astr)] = s[*i];
-    astr[strlen(astr)+1] = '\0';
-    (*i)++;
+    astr = realloc(astr, sizeof(char) * len+2);
+    astr[len] = s[*i];
+    astr[len+1] = '\0';
+    ++len;
+    ++*i;
   }
 
   lisp *a = mkAtom(astr);
@@ -84,9 +90,7 @@ lisp *parse(char *s, int *i) {
     } else if (s[*i] == '\'') {
       ++*i;
       lisp *a = parse(s, i);
-      return cons(mkAtom("quote"),
-		  cons(a,
-		       mkAtom("nil")));
+      return list(2, mkAtom("quote"), a);
     } else if (s[*i] == ';') {
       while (s[*i] != '\n' && *i < strlen(s))
 	++*i;
@@ -112,6 +116,7 @@ int main(int argc, char **argv)
   fputs("µLisp v0.0.1\n", stderr);
   fputs("C-c to exit\n", stderr);
 
+  lisp *l = NULL;
   lisp *env = the_global_environment();
   while (1) {
     char *input = readline("> ");
@@ -120,24 +125,21 @@ int main(int argc, char **argv)
 
     add_history(input);
 
-    lisp *l = NULL;
     int *i = calloc(1, sizeof(int));
     l = parse(input, i);
-    /* showLisp(l); */
-    /* puts(""); */
-    /* prettyPrint(l); */
-    /* puts(""); */    
 
-    if (l != NULL) {
+    if (l) {
       l = eval(l, env);
       prettyPrint(l);
       puts("");
-      freeLisp(l);
     }
 
     free(i);
     free(input);
   }
+
+  // freeLisp(l);
+  freeLisp(env);
 
   return 0;
 }

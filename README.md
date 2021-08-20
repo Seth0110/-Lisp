@@ -31,9 +31,13 @@ Example: `<test.ul ulisp`
 - [x] Implement Pure Lisp with Lisp 1.5 Programmer's Manual as reference
 - [x] Finish Parser
 - [x] Switch existing code to SICP implementation
-- [ ] All core operations functional
+- [x] All core operations functional
+- [ ] Replace `int is_eq(lisp *, char *)` with `int is_eq(lisp *, lisp *)`
+- [ ] Fix memory leaks
+- [ ] Add support for multi-line expressions
+- [ ] Add `let` and `define` syntactic sugar
 - [ ] Refactor implementation to simplify
-- [ ] Refactor primitives in eval to use a data-directed method for easier modification
+- [ ] Refactor primitives to use a data-directed method for easier modification
 - [ ] Add support for mathematics
 - [ ] Additional libraries as needed
 - [ ] Full testing for core Lisp and libraries
