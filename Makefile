@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=c99 -Wall -Werror -O2 $(INCS) $(LIBS) -g
+CFLAGS=-std=c99 -Wall -Werror $(INCS) $(LIBS) -g
 DEPS=ulisp.h
 INCS=`pkg-config --cflags libedit`
 LIBS=`pkg-config --libs libedit`

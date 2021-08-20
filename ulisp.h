@@ -53,5 +53,6 @@ void showLisp(lisp *);
 int length(lisp *);
 lisp *nth(lisp *, int);
 void prettyPrint(lisp *);
+lisp *the_global_environment();
 
 #endif

@@ -112,6 +112,7 @@ int main(int argc, char **argv)
   fputs("µLisp v0.0.1\n", stderr);
   fputs("C-c to exit\n", stderr);
 
+  lisp *env = the_global_environment();
   while (1) {
     char *input = readline("> ");
     if (!input)
@@ -128,7 +129,7 @@ int main(int argc, char **argv)
     /* puts(""); */    
 
     if (l != NULL) {
-      l = eval(l, mkAtom("nil"));
+      l = eval(l, env);
       prettyPrint(l);
       puts("");
       freeLisp(l);
