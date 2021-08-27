@@ -37,14 +37,21 @@ char *help_string =
   "Usage: repl OPTION\n\n"
   "µLisp, a simple Lisp based on Structure and Interpretation of Computer Programs.\n\n"
   "Initialization options:\n\n"
-  "-h\tdisplay this help and exit\n"
-  "-v\toutput version information and exit\n\n"
+  "-h\tShow this help and exit\n"
+  "-v\tShow version information and exit\n\n"
   "Please report bugs to https://github.com/Seth0110/uLisp/issues\n";
+
+char *repl_help_string =
+  "Help commands:\n\n"
+  ",c\tClear the terminal screen\n"
+  ",h\tShow this help\n"
+  ",q\tQuit µLisp\n"
+  ",v\tShow version information\n";
 
 int is_atom_char(char s)
 {
-  char *valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.\"!?+-*/=<>";
-  if (strchr(valid, s))
+  char *valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.\"!?+-*/=<>#";
+  if (s && strchr(valid, s))
     return 1;
   else
     return 0;
@@ -69,6 +76,17 @@ lisp *parseAtom(char *s, int *i)
   return a;
 }
 
+int parens(char *s)
+{
+  int depth = 0;
+  for (int i = 0; i < strlen(s); i++)
+    if (s[i] == '(')
+      depth++;
+    else if (s[i] == ')')
+      depth--;
+  return depth;
+}
+
 /* Parse an S-Expression */
 lisp *parse(char *s, int *i) {
   if (*i < strlen(s)) {
@@ -84,7 +102,7 @@ lisp *parse(char *s, int *i) {
       return cons(a, b);
     } else if (s[*i] == ')') {
       return mkAtom("nil");
-    } else if (s[*i] == ' ') {
+    } else if (s[*i] == ' ' || s[*i] == '\n') {
       ++*i;
       return parse(s, i);
     } else if (s[*i] == '\'') {
@@ -103,6 +121,22 @@ lisp *parse(char *s, int *i) {
   }
 }
 
+void process_repl_arg(char arg)
+{
+  
+  switch (arg) {
+  case 'c':
+    printf("\033[2J\033[1;1H");
+    break;
+  case 'h':
+    printf("%s", repl_help_string);
+    break;
+  case 'v':
+    printf("%s", gpl_string);
+    break;
+  }
+}
+
 int main(int argc, char **argv)
 {
   if (argc == 2) {
@@ -116,29 +150,52 @@ int main(int argc, char **argv)
   fputs("µLisp v0.0.1\n", stderr);
   fputs("C-c to exit\n", stderr);
 
-  lisp *l = NULL;
   lisp *env = the_global_environment();
+  
   while (1) {
-    char *input = readline("> ");
-    if (!input)
-      break;
+    char *buffer = calloc(1, sizeof(char));
+    int lines = 0;
+    do {
+      char *line;
+      if (!lines)
+	line = readline("> ");
+      else
+	line = readline("");
 
-    add_history(input);
+      if (!line) {
+	return 0;
+      } else {
+	buffer = realloc(buffer, strlen(buffer) + strlen(line) + 1);
+	buffer = strcat(buffer, line);	
+	add_history(line);
+      }
+      
+      lines++;
+      free(line);
+    } while (parens(buffer) > 0);
 
-    int *i = calloc(1, sizeof(int));
-    l = parse(input, i);
-
-    if (l) {
-      l = eval(l, env);
-      prettyPrint(l);
-      puts("");
+    if (!strcmp(buffer, ",q")) {
+      fputs("Goodbye!\n", stderr);
+      free(buffer);
+      return 0;
+    } else if (buffer[0] == ',') {
+      process_repl_arg(buffer[1]);
+    } else if (parens(buffer) == 0) {
+      int i = 0;
+      lisp *input = parse(buffer, &i);
+      free(buffer);
+      if (input) {
+	lisp *output = eval(input, env);
+	prettyPrint(output);
+	puts("");
+	freeLisp(output);
+	freeLisp(input);
+      }
+    } else {
+      fputs("Unbalanced S-Expression!\n", stderr);
     }
-
-    free(i);
-    free(input);
   }
 
-  // freeLisp(l);
   freeLisp(env);
 
   return 0;

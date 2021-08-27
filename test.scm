@@ -18,4 +18,18 @@
 (begin (eq? 1 0) (eq? 1 1))
 (cond ((eq? 1 0) (quote a)) (else (quote b)))
 (define ten 10)
-ten
+
+;; Compound procedures
+(define (safecar x)
+  (if (atom? x)
+      x
+      (car x)))
+(safecar (quote a))
+(safecar (quote (a)))
+
+;; Recursion
+(define (factorial n)
+  (if (= n 1)
+      1
+      (* n (factorial (- n 1)))))
+(factorial 6)
