@@ -34,6 +34,7 @@ Example: `<test.ul ulisp`
 - More error handling, program should never segfault
 - Fix memory leaks... Or build a garbage collector
 - Automatically import a base library
+- Implement SICP analyze function
 - Comprehensive testing suite
 - Homebrew readline library, to remove the dependency and to support 'λ'!
 - Tail recursion

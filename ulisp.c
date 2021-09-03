@@ -25,13 +25,15 @@
 
 #include "ulisp.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 /* Naming conversions from SICP:
  * null?           -> is_null
  * primitive-apply -> primitive_apply
  * set-car!        -> set_car_i
  */
+
+void s(lisp *l);
 
 void freeLisp (lisp *l)
 {
@@ -48,6 +50,9 @@ void freeLisp (lisp *l)
 
 lisp *copy(lisp *l)
 {
+  printf("Copy: ");
+  prettyPrint(l);
+  puts("");
   if (!l)
     return NULL;
   if (l->atom)
@@ -287,7 +292,7 @@ lisp *assoc(lisp *x, lisp *a)
 
 lisp *error(char *msg, int lispc, ...)
 {
-  fprintf(stderr, "%s\n", msg);
+  fprintf(stderr, "%s: ", msg);
   
   va_list valist;
   lisp *l;
@@ -420,7 +425,7 @@ int is_compound_procedure(lisp *p)
 
 lisp *make_procedure(lisp *parameters, lisp *body, lisp *env)
 {
-  return list(4, mkAtom("procedure"), parameters, body, copy(env));
+  return list(4, mkAtom("procedure"), parameters, body, env);
 }
 
 lisp *procedure_parameters(lisp *p)
@@ -446,6 +451,8 @@ double plus(lisp *l)
     return ltof(car(l)) + plus(cdr(l));
   } else {
     fputs("Not a number -- PLUS\n", stderr);
+    prettyPrint(l);
+    puts("");
     return 0;
   }
 }
@@ -662,12 +669,12 @@ lisp *apply(lisp *procedure, lisp *arguments)
   }
   if (is_primitive_procedure(procedure))
     return apply_primitive_procedure(procedure, arguments);
-  else if (is_compound_procedure(procedure))
+  else if (is_compound_procedure(procedure)) {
     return eval_sequence(procedure_body(procedure),
 			 extend_environment(procedure_parameters(procedure),
 					    arguments,
 					    procedure_environment(procedure)));
-  else
+  } else
     return error("Unknown procedure type -- APPLY", 1, procedure);
 }
 
@@ -1060,12 +1067,12 @@ void prettyPrint(lisp *l)
     if (is_atom(l)) {
       printf("%s", l->atom);
     } else if (is_compound_procedure(l)) {
-      /* printf("(λ "); */
-      /* prettyPrint(procedure_parameters(l)); */
-      /* printf(" "); */
-      /* prettyPrint(car(procedure_body(l))); */
-      /* printf(")"); */
-      printf("PROC");
+      printf("(λ ");
+      prettyPrint(procedure_parameters(l));
+      printf(" ");
+      prettyPrint(car(procedure_body(l)));
+      printf(")");
+      /* printf("PROC"); */
     } else {
       putchar('(');
       int len = length(l);

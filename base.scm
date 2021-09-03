@@ -41,12 +41,28 @@
 ;; bytevector-u8-ref
 ;; bytevector-u8-set!
 ;; bytevector?
+
+(define (caar x)
+  (car (car x)))
+
+(define (cadr x)
+  (car (cdr x)))
+
 ;; call-with-current-continuation
 ;; call-with-port
 ;; call-with-values
 ;; call/cc
 ;; case
-;; ceiling
+
+(define (cdar x)
+  (cdr (car x)))
+
+(define (cddr x)
+  (cdr (cdr x)))
+
+(define (ceiling x)
+  (+ (floor x) 1))
+
 ;; char->integer
 ;; char-ready?
 ;; char<=?
@@ -276,20 +292,20 @@
 ;; write-string
 ;; write-u8
 (define (zero? x)
-  (eq? x 0))
+  (= x 0))
 
-;;(<= 0 1)
-;;(>= 1 0)
-(abs -1)
+;; (<= 0 1)
+;; (>= 1 0)
+;;; (abs -1)
 ;; (and #t #t)
-;; (append (quote (a)) (quote b))
+;;; (append (quote (a)) (quote b))
 ;; (even? 10)
-(floor 1.5)
-(modulo 3 2)
+;;; (floor 1.5)
+;; (modulo 17 3)
 ;; (negative? -1)
-;; (not #f)
+;;; (not #f)
 ;; (odd? 3)
 ;; (or #f #t)
 ;; (positive? 3)
-;; (square 3)
-(zero? 0)
+;;; (square 3)
+;; (zero? 0)
