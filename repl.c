@@ -48,15 +48,6 @@ char *repl_help_string =
   ",q\tQuit µLisp\n"
   ",v\tShow version information\n";
 
-int is_atom_char(char s)
-{
-  char *valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.\"!?+-*/=<>#";
-  if (s && strchr(valid, s))
-    return 1;
-  else
-    return 0;
-}
-
 lisp *parseAtom(char *s, int *i)
 {
   char *astr = calloc(sizeof(char), 1);
@@ -175,6 +166,7 @@ int main(int argc, char **argv)
     } while (parens(buffer) > 0);
 
     if (!strcmp(buffer, ",q")) {
+      // TODO: Say "Goodbye!" in a random language
       fputs("Goodbye!\n", stderr);
       free(buffer);
       return 0;

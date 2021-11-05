@@ -2,29 +2,20 @@
 ;; ...
 
 (define (<= x y)
-  (if (or (< x y) (= x y))
-      true
-      false))
+  (or (< x y) (= x y)))
 
 (define (>= x y)
-  (if (or (> x y) (= x y))
-      true
-      false))
+  (or (> x y) (= x y)))
 
 (define (abs x)
   (if (< x 0)
       (- x)
       x))
 
-(define (and xs)
-  (if (not (car xs))
-      #f
-      (and (cdr xs))))
-
-(define (append x y)
-  (if (null? x)
-      y
-      (cons (car x) (append (cdr x) y))))
+(define (append list1 list2)
+  (if (null? list1)
+      list2
+      (cons (car list1) (append (cdr list1) list2))))
 
 ;; apply
 ;; assoc
@@ -96,7 +87,7 @@
 ;; error-object-message
 ;; error-object?
 
-(define (even? n)
+(define (even? x)
   (= 0 (remainder x 2)))
 
 ;; exact
@@ -108,7 +99,7 @@
 ;; file-error?
 
 (define (floor n)
-  (+ n (remainder 1 n)))
+  (- n (remainder n 1)))
 
 ;; floor-quotient
 ;; floor-remainder
@@ -150,21 +141,21 @@
 ;; make-string
 ;; make-vector
 
-;; (define (map f xs)
-;;   (if (null? xs)
-;;       nil
-;;       (cons (f (car x))
-;; 	    (map f (cdr xs)))))
+(define (map f xs)
+  (if (null? xs)
+      nil
+      (cons (f (car xs))
+	    (map f (cdr xs)))))
 
 ;; max
 
 ;; (define (member item x)
-;;   (cond ((null? x) false)
+;;   (cond ((null? x) #f)
 ;; 	((equal? item (car x)) x)
 ;; 	(else (member item (cdr x)))))
 
 ;; (define (memq item x)
-;;   (cond ((null? x) false)
+;;   (cond ((null? x) #f)
 ;; 	((eq? item (car x)) x)
 ;; 	(else (memq item (cdr x)))))
 
@@ -175,14 +166,12 @@
   (remainder x y))
 
 (define (negative? n)
-  (< 0 n))
+  (< n 0))
 
 ;; newline
 
-(define (not x)
-  (if x
-      #f
-      #t))
+(define nil
+  (quote ()))
 
 ;; number->string
 ;; number?
@@ -196,11 +185,6 @@
 ;; open-output-bytevector
 ;; open-output-string
 
-(define (or xs)
-  (if (car xs)
-      #t
-      (or (cdr xs))))
-
 ;; output-port-open?
 ;; output-port?
 ;; pair?
@@ -210,7 +194,7 @@
 ;; port?
 
 (define (positive? n)
-  (> 0 n))
+  (> n 0))
 
 ;; procedure?
 ;; quasiquote
@@ -291,21 +275,21 @@
 ;; write-char
 ;; write-string
 ;; write-u8
+
 (define (zero? x)
   (= x 0))
 
-;; (<= 0 1)
-;; (>= 1 0)
-;;; (abs -1)
-;; (and #t #t)
-;;; (append (quote (a)) (quote b))
-;; (even? 10)
-;;; (floor 1.5)
-;; (modulo 17 3)
-;; (negative? -1)
-;;; (not #f)
-;; (odd? 3)
-;; (or #f #t)
-;; (positive? 3)
-;;; (square 3)
-;; (zero? 0)
+;; Base Test - Everything should return #t
+; (<= 0 1)
+; (>= 1 0)
+; (= (abs -1) 1)
+; (equal? (append (quote (a)) (quote (b c))) (quote (a b c)))
+; (even? 10)
+; (= (floor 1.5) 1)
+(map odd? (quote (1 2 3)))
+; (= (modulo 17 3) 2)
+; (negative? -1)
+; (odd? 3)
+; (positive? 3)
+; (= (square 3) 9)
+; (zero? 0)
