@@ -17,13 +17,18 @@
       list2
       (cons (car list1) (append (cdr list1) list2))))
 
-;; apply
+;; apply ; Implement in C
 ;; assoc
 ;; assq
 ;; assv
 ;; binary-port?
 ;; boolean=?
 ;; boolean?
+
+(define (boolean? b)
+  (or (eq? b #t)
+      (eq? b #f)))
+
 ;; bytevector
 ;; bytevector-append
 ;; bytevector-copy
@@ -141,23 +146,23 @@
 ;; make-string
 ;; make-vector
 
-(define (map f xs)
-  (if (null? xs)
+(define (map proc items)
+  (if (null? items)
       nil
-      (cons (f (car xs))
-	    (map f (cdr xs)))))
+      (cons (proc (car items))
+            (map proc (cdr items)))))
 
 ;; max
 
-;; (define (member item x)
-;;   (cond ((null? x) #f)
-;; 	((equal? item (car x)) x)
-;; 	(else (member item (cdr x)))))
+(define (member item x)
+  (cond ((null? x) false)
+        ((equal? item (car x)) x)
+        (else (memq item (cdr x)))))
 
-;; (define (memq item x)
-;;   (cond ((null? x) #f)
-;; 	((eq? item (car x)) x)
-;; 	(else (memq item (cdr x)))))
+(define (memq item x)
+  (cond ((null? x) false)
+        ((eq? item (car x)) x)
+        (else (memq item (cdr x)))))
 
 ;; memv
 ;; min
@@ -174,7 +179,7 @@
   (quote ()))
 
 ;; number->string
-;; number?
+;; number? ; Implement in C
 ;; numerator
 
 (define (odd? n)
@@ -184,7 +189,6 @@
 ;; open-input-string
 ;; open-output-bytevector
 ;; open-output-string
-
 ;; output-port-open?
 ;; output-port?
 ;; pair?
@@ -211,7 +215,13 @@
 ;; read-string
 ;; read-u8
 ;; real?
-;; reverse
+
+(define (reverse l)
+  (if (null? l)
+      nil
+      (append (reverse (cdr l))
+	      (list (car l)))))
+
 ;; round
 ;; set-car!
 ;; set-cdr!
@@ -279,6 +289,8 @@
 (define (zero? x)
   (= x 0))
 
+(load "cxr.scm")
+
 ;; Base Test - Everything should return #t
 ; (<= 0 1)
 ; (>= 1 0)
@@ -286,7 +298,7 @@
 ; (equal? (append (quote (a)) (quote (b c))) (quote (a b c)))
 ; (even? 10)
 ; (= (floor 1.5) 1)
-(map odd? (quote (1 2 3)))
+; (map odd? (quote (1 2 3)))
 ; (= (modulo 17 3) 2)
 ; (negative? -1)
 ; (odd? 3)

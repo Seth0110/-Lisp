@@ -32,3 +32,13 @@ ten
       1
       (* n (factorial (- n 1)))))
 (factorial 6)
+
+;; Let
+(let ((x 3) (y 4) (z 5)) (+ x y z))
+
+;; Inner Defines
+(define (f x)
+  (define (g y)
+    (+ y 1))
+  (g x))
+(f 2)

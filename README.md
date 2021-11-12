@@ -30,10 +30,8 @@ Example: `<test.ul ulisp`
 
 ## Todo
 
-- Add `let` syntactic sugar
 - More error handling, program should never segfault!
 - Garbage collection
-- (load "module.scm") function
 - Automatically import a base library
 - Comprehensive testing suite
 - Homebrew readline library, to remove the dependency and to support 'λ'!
@@ -41,10 +39,13 @@ Example: `<test.ul ulisp`
 - More optimization from SICP
 - geiser-ulisp emacs package
 - Full R7RS-small compatibility
+- Lots of refactoring and code cleanup!
 
 ## Known Bugs
 
 - MANY memory leaks
+- String parsing doesn't handle spaces or backslashes
+- Newline parsing has bug(s)
 - ' only works for atoms
 - Definitions with closures only return "ok"
 

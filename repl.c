@@ -48,73 +48,8 @@ char *repl_help_string =
   ",q\tQuit µLisp\n"
   ",v\tShow version information\n";
 
-lisp *parseAtom(char *s, int *i)
-{
-  char *astr = calloc(sizeof(char), 1);
-  int len = 0;
-
-  while (is_atom_char(s[*i])) {
-    astr = realloc(astr, sizeof(char) * len+2);
-    astr[len] = s[*i];
-    astr[len+1] = '\0';
-    ++len;
-    ++*i;
-  }
-
-  lisp *a = mkAtom(astr);
-  free(astr);
-
-  return a;
-}
-
-int parens(char *s)
-{
-  int depth = 0;
-  for (int i = 0; i < strlen(s); i++)
-    if (s[i] == '(')
-      depth++;
-    else if (s[i] == ')')
-      depth--;
-  return depth;
-}
-
-/* Parse an S-Expression */
-lisp *parse(char *s, int *i) {
-  if (*i < strlen(s)) {
-    if (is_atom_char(s[*i])) {
-      lisp *a = parseAtom(s, i);
-      lisp *b = parse(s, i);
-      return cons(a, b);
-    } else if (s[*i] == '(') {
-      ++*i;
-      lisp *a = parse(s, i);
-      ++*i;
-      lisp *b = parse(s, i);
-      return cons(a, b);
-    } else if (s[*i] == ')') {
-      return mkAtom("nil");
-    } else if (s[*i] == ' ' || s[*i] == '\n') {
-      ++*i;
-      return parse(s, i);
-    } else if (s[*i] == '\'') {
-      ++*i;
-      lisp *a = parse(s, i);
-      return list(2, mkAtom("quote"), a);
-    } else if (s[*i] == ';') {
-      while (s[*i] != '\n' && *i < strlen(s))
-	++*i;
-      return parse(s, i);
-    } else {
-      return NULL;
-    }
-  } else {
-    return NULL;
-  }
-}
-
 void process_repl_arg(char arg)
-{
-  
+{  
   switch (arg) {
   case 'c':
     printf("\033[2J\033[1;1H");
@@ -142,6 +77,8 @@ int main(int argc, char **argv)
   fputs("C-c to exit\n", stderr);
 
   lisp *env = the_global_environment();
+
+  // load_file(mkAtom("\"base.scm\""), env);
   
   while (1) {
     char *buffer = calloc(1, sizeof(char));
@@ -178,9 +115,9 @@ int main(int argc, char **argv)
       free(buffer);
       if (input) {
 	lisp *output = eval(input, env);
-	prettyPrint(output);
-	puts("");
-	freeLisp(output);
+	printf("; ");
+	s(output);
+	// freeLisp(output);
 	freeLisp(input);
       }
     } else {
