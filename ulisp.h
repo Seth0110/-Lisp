@@ -25,10 +25,6 @@ typedef struct Lisp {
   struct Lisp *snd;
 } lisp;
 
-/* Generated via:
- * grep -E '^[a-z]+ .+\(*?\)$' ulisp.c | sed -E 's/\)$/\);/g; s/^[0-9]+://g' | sort
- */
-
 char *string_value(lisp *e);
 double divide(lisp *l);
 double ltof(lisp *l);
@@ -55,6 +51,7 @@ int is_elem(lisp *a, lisp *l);
 int is_eq(lisp *a, lisp *b);
 int is_eq_str(lisp *a, char *b);
 int is_equal(lisp *x, lisp *y);
+int is_err(lisp *e);
 int is_false(lisp *x);
 int is_if(lisp *exp);
 int is_int(lisp *e);
@@ -110,6 +107,7 @@ lisp *enclosing_environment(lisp *env);
 lisp *env_loop(lisp *var, lisp *env);
 lisp *env_scan(lisp *var, lisp *vars, lisp *vals, lisp *env);
 lisp *error(char *msg, int lispc, ...);
+lisp *error_lisp(lisp *e);
 lisp *eval_assignment(lisp *exp, lisp *env);
 lisp *eval_definition(lisp *exp, lisp *env);
 lisp *eval_if(lisp *exp, lisp *env);
@@ -145,6 +143,7 @@ lisp *make_procedure(lisp *parameters, lisp *body, lisp *env);
 lisp *map_cadr(lisp *exps);
 lisp *map_car(lisp *exps);
 lisp *mkAtom(char *val);
+lisp *mkStrAtom(char *val);
 lisp *not(lisp *x);
 lisp *nth(lisp *l, int i);
 lisp *num_eq(lisp *l);
@@ -156,12 +155,16 @@ lisp *or(lisp *xs);
 lisp *pairlis(lisp *x, lisp *y, lisp *a);
 lisp *parseAtom(char *s, int *i);
 lisp *parse(char *s, int *i);
+lisp *parseString(char *s, int *i);
 lisp *primitive_procedures_list();
 lisp *procedure_body(lisp *p);
 lisp *procedure_environment(lisp *p);
 lisp *procedure_parameters(lisp *p);
+lisp *random(lisp *modulus);
 lisp *rest_exps(lisp *seq);
 lisp *rest_operands(lisp *ops);
+lisp *safe_car(lisp *l);
+lisp *safe_cdr(lisp *l);
 lisp *sequence_exp(lisp *seq);
 lisp *setup_environment();
 lisp *set_variable_value_i(lisp *var, lisp *val, lisp *env);

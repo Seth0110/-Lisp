@@ -2,7 +2,7 @@
 
 ## Overview
 
-µLisp is a simple Lisp implementation written in C.
+µLisp is a simple Scheme implementation written in C.
 Its aim is to have as small of an implementation language corpus as possible (without code obfuscation),
 as well as a new language for future personal projects.
 
@@ -25,14 +25,17 @@ Run the following command to uninstall µLisp:
 
 Start the interactive prompt with `ulisp`.
 
-To run a µLisp file, pipe via stdin.  
-Example: `<test.ul ulisp`
+To run a uLisp file, use one of the following methods:
+
+Repl: `$ ./ulisp -l file.scm`  
+Scheme: `> (load "file.scm")`  
+Stdin: `$ <file.scm ./ulisp`  
 
 ## Todo
 
-- More error handling, program should never segfault!
+- More error handling, program should never segfault from bad Scheme syntax!
+- Actually decent number implementation
 - Garbage collection
-- Automatically import a base library
 - Comprehensive testing suite
 - Homebrew readline library, to remove the dependency and to support 'λ'!
 - Tail recursion
@@ -41,14 +44,13 @@ Example: `<test.ul ulisp`
 - Full R7RS-small compatibility
 - Lots of refactoring and code cleanup!
 
-## Known Bugs
+## Known Problems
 
 - MANY memory leaks
-- String parsing doesn't handle spaces or backslashes
-- Newline parsing has bug(s)
+- Newline parsing with conditionals
 - ' only works for atoms
-- Definitions with closures only return "ok"
+- Inner definitions not implemented
 
 ## Attribution
 
-µLisp at its core is a C implementation of Lisp as defined in [Structure and Interpretation of Computer Programs](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book.html) by Ableson, Sussman, and Sussman, licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+µLisp at its core is a C implementation of Scheme inspired by [Structure and Interpretation of Computer Programs](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book.html) by Ableson, Sussman, and Sussman, licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).

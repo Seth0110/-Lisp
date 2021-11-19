@@ -1,4 +1,4 @@
-/* Core Lisp implementation built using SICP
+/* Core Scheme implementation built using SICP
  *
  * This file is part of µLisp.
  *
@@ -113,7 +113,7 @@ lisp *to_list(lisp *l)
 
 lisp *primitive_procedures_list()
 {
-  return list(22,
+  return list(24,
 	      mkAtom("car"),
 	      mkAtom("cdr"),
 	      mkAtom("cons"),
@@ -135,13 +135,25 @@ lisp *primitive_procedures_list()
 	      mkAtom("or"),
 	      mkAtom("sin"),
 	      mkAtom("cos"),
-	      mkAtom("display")
+	      mkAtom("display"),
+	      mkAtom("error"),
+	      mkAtom("random")
 	      );
 }
 
 lisp *car(lisp *l)
 {
   return l->fst;
+}
+
+lisp *safe_car(lisp *l)
+{
+  if (l && l->fst) {
+    return l->fst;
+  } else {
+    puts("Argument of incorrect type supplied to: car");
+    return mkAtom("ERR");
+  }
 }
 
 void set_car_i(lisp *x, lisp *y)
@@ -180,6 +192,16 @@ lisp *cdr(lisp *l)
   return l->snd;
 }
 
+lisp *safe_cdr(lisp *l)
+{
+  if (l && l->snd) {
+    return l->snd;
+  } else {
+    puts("Argument of incorrect type supplied to: cdr");
+    return mkAtom("ERR");
+  }
+}
+
 lisp *mkAtom(char *val)
 {
   lisp *l = malloc(sizeof(lisp));
@@ -188,6 +210,23 @@ lisp *mkAtom(char *val)
   l->snd = NULL;
   strcpy(l->atom, val);
   return l;
+}
+
+lisp *mkStrAtom(char *val)
+{
+  int len = strlen(val);
+  char *str = malloc(sizeof(char) * (len + 3));
+
+  str[0] = '"';
+  for (int i = 0; i < len+1; i++)
+    str[i+1] = val[i];
+  str[len+1] = '"';
+  str[len+2] = '\0';
+
+  lisp *out = mkAtom(str);
+  free(str);
+
+  return out;
 }
 
 int atomcmp(lisp *l, char *s)
@@ -212,7 +251,7 @@ double ltof(lisp *l)
 
 int is_atom(lisp *l)
 {
-  return l->atom != NULL;
+  return l != NULL && l->atom != NULL;
 }
 
 lisp *caar(lisp *l)
@@ -311,7 +350,22 @@ lisp *error(char *msg, int lispc, ...)
 
   va_end(valist);
 
-  return mkAtom("nil");
+  return mkAtom("ERR");
+}
+
+lisp *error_lisp(lisp *e)
+{
+  if (is_null(e)) {
+    return mkAtom("ERR");
+  } else if (length(e) == 1) {
+    display(car(e));
+    puts("");
+    return error_lisp(cdr(e));
+  } else {
+    display(car(e));
+    printf(" ");
+    return error_lisp(cdr(e));
+  }
 }
 
 int is_last_exp(lisp *seq)
@@ -592,9 +646,9 @@ lisp *btol(int b)
 lisp *apply_primitive_procedure(lisp *procedure, lisp *arguments)
 {
   if (is_eq_str(procedure, "car"))
-    return car(car(arguments));
+    return safe_car(car(arguments));
   else if (is_eq_str(procedure, "cdr"))
-    return cdr(car(arguments));
+    return safe_cdr(car(arguments));
   else if (is_eq_str(procedure, "cons"))
     return cons(car(arguments), cadr(arguments));
   else if (is_eq_str(procedure, "atom?"))
@@ -637,6 +691,10 @@ lisp *apply_primitive_procedure(lisp *procedure, lisp *arguments)
     return btol(is_pair(car(arguments)));
   else if (is_eq_str(procedure, "display"))
     return display(car(arguments));
+  else if (is_eq_str(procedure, "error"))
+    return error_lisp(arguments);
+  else if (is_eq_str(procedure, "random"))
+    return random(car(arguments));
   else
     return error("Tried to apply non-primitive procedure", 2, procedure, arguments);
 }
@@ -721,7 +779,9 @@ lisp *apply(lisp *procedure, lisp *arguments)
     prettyPrint(arguments);
     puts("");
   }
-  if (is_primitive_procedure(procedure))
+  if (is_err(procedure) || is_err(arguments))
+    return mkAtom("ERR");
+  else if (is_primitive_procedure(procedure))
     return apply_primitive_procedure(procedure, arguments);
   else if (is_compound_procedure(procedure)) {
     return eval_sequence(procedure_body(procedure),
@@ -734,7 +794,7 @@ lisp *apply(lisp *procedure, lisp *arguments)
 
 int is_atom_char(char s)
 {
-  char *valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.\"!?+-*/=<>#";
+  char *valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.!?+-*/=<>#";
   if (s && strchr(valid, s))
     return 1;
   else
@@ -753,6 +813,18 @@ int is_symbol(lisp *e)
   } else {
     return 0;
   }
+}
+
+int is_err(lisp *e)
+{
+  if (!e)
+    return 0;
+  else if (is_null(e))
+    return 0;
+  else if (is_pair(e))
+    return is_err(safe_car(e)) || is_err(safe_cdr(e));
+  else
+    return is_eq_str(e, "ERR");
 }
 
 int is_int(lisp *e)
@@ -811,7 +883,7 @@ char *string_value(lisp *e)
   char *str = malloc(sizeof(char) * len);
 
   for (int i = 1; i < len; i++)
-    str[i-1] = atom[i];
+      str[i-1] = atom[i];
   str[len-1] = '\0';
 
   return str;
@@ -979,7 +1051,8 @@ lisp *sequence_exp(lisp *seq)
 
 int is_application(lisp *exp)
 {
-  return is_pair(exp);
+  return length(exp) >= 1;
+  // return is_pair(exp);
 }
 
 lisp *operator(lisp *exp)
@@ -1134,42 +1207,53 @@ lisp *file_to_load(lisp *exp)
 
 lisp *load_file(lisp *file, lisp *env)
 {
-  char *fn = string_value(file);
-  FILE *fp = fopen(fn, "r");
+  char *fn_local = string_value(file);
+  FILE *fp_local = fopen(fn_local, "r");
 
-  if (fp == NULL) {
-    error("Unable to load file", 1, file);
-  } else {
-    while (1) {
-      char *buffer = calloc(1, sizeof(char));
-      do {
-	char line[80];
-	if (fgets(line, 80, fp) == NULL) {
-	  fclose(fp);
-	  free(fn);
-	  return mkAtom("ok");
-	} else {
-	  buffer = realloc(buffer, strlen(buffer) + strlen(line) + 1);
-	  buffer = strcat(buffer, line);
-	}
-      } while (parens(buffer) > 0);
+  char *share = "/usr/share/ulisp/";
+  char *fn_share = malloc(sizeof(char) * (strlen(share) + strlen(fn_local) + 1));
+  fn_share = strcpy(fn_share, share);
+  fn_share = strcat(fn_share, fn_local);
+  FILE *fp_share = fopen(fn_share, "r");
 
-      if (parens(buffer) == 0) {
-	int i = 0;
-	lisp *input = parse(buffer, &i);
-	free(buffer);
-	if (input) {
-	  eval(input, env);
-	  freeLisp(input);
-	}
+  FILE *fp = NULL;
+  if (fp_local)
+    fp = fp_local;
+  else if (fp_share)
+    fp = fp_share;
+  else
+    return error("Unable to load file", 1, file);
+
+  int eof = 0;
+  while (!eof) {
+    char *buffer = calloc(1, sizeof(char));
+    do {
+      char line[128];
+      if (fgets(line, 128, fp)) {
+	buffer = realloc(buffer, strlen(buffer) + strlen(line) + 1);
+	buffer = strcat(buffer, line);
       } else {
-	fputs("Unbalanced S-Expression!\n", stderr);
+	eof = 1;
       }
+    } while (parens(buffer) > 0);
+    
+    if (parens(buffer) == 0) {
+      int i = 0;
+      lisp *input = parse(buffer, &i);
+      free(buffer);
+      if (input) {
+	eval(input, env);
+	freeLisp(input);
+      }
+    } else {
+      fputs("Unbalanced S-Expression!\n", stderr);
     }
-    fclose(fp);
   }
 
-  free(fn);
+  fclose(fp);
+  free(fn_local);
+  free(fn_share);
+  
   return mkAtom("ok");
 }
 
@@ -1179,11 +1263,11 @@ lisp *eval(lisp *e, lisp *env)
   if (DEBUG) {
     printf("eval  : ");
     prettyPrint(exp);
-    printf("\n      : ");
-    prettyPrint(env);
     puts("");
   }
-  if (is_self_evaluating(exp))
+  if (is_err(exp))
+    return mkAtom("ERR");
+  else if (is_self_evaluating(exp))
     return mkAtom(exp->atom);
   else if (is_variable(exp))
     return lookup_variable_value(exp, env);
@@ -1292,6 +1376,50 @@ lisp *parseAtom(char *s, int *i)
   return a;
 }
 
+lisp *parseString(char *s, int *i)
+{
+  char *astr = calloc(sizeof(char), 1);
+  int len = 0;
+  int escaped = 0;
+
+  astr = realloc(astr, sizeof(char) * len+2);
+  astr[len] = '"';
+  astr[len+1] = '\0';
+  ++len;
+  ++*i;
+
+  while (1) {
+    if (!escaped && s[*i] == '"')
+      break;
+    escaped = 0;
+
+    if (s[*i] == '\\')
+      escaped = 1;
+
+    astr = realloc(astr, sizeof(char) * len+2);
+    if (escaped && s[*i] == 'n') {
+      astr[len] = '\n';
+      escaped = 0;
+    } else {
+      astr[len] = s[*i];
+    }
+    astr[len+1] = '\0';
+    ++len;
+    ++*i;
+  }
+
+  astr = realloc(astr, sizeof(char) * len+2);
+  astr[len] = '"';
+  astr[len+1] = '\0';
+  ++len;
+  ++*i;
+
+  lisp *a = mkAtom(astr);
+  free(astr);
+
+  return a;
+}
+
 int parens(char *s)
 {
   int depth = 0;
@@ -1311,6 +1439,10 @@ lisp *parse(char *s, int *i)
       lisp *a = parseAtom(s, i);
       lisp *b = parse(s, i);
       return cons(a, b);
+    } else if (s[*i] == '"') {
+      lisp *a = parseString(s, i);
+      lisp *b = parse(s, i);
+      return cons(a, b);
     } else if (s[*i] == '(') {
       ++*i;
       lisp *a = parse(s, i);
@@ -1325,7 +1457,10 @@ lisp *parse(char *s, int *i)
     } else if (s[*i] == '\'') {
       ++*i;
       lisp *a = parse(s, i);
-      return list(2, mkAtom("quote"), a);
+      // ++*i;
+      // lisp *b = parse(s, i);
+      return cons(mkAtom("quote"), cons(a, mkAtom("nil")));
+      // return list(2, mkAtom("quote"), a);
     } else if (s[*i] == ';') {
       while (s[*i] != '\n' && *i < strlen(s))
 	++*i;
@@ -1336,4 +1471,11 @@ lisp *parse(char *s, int *i)
   } else {
     return NULL;
   }
+}
+
+lisp *random(lisp *modulus)
+{
+  int m = floor(ltof(modulus));
+
+  return ftol(rand() % m);
 }

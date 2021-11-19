@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "ulisp.h"
 
@@ -35,10 +36,11 @@ char *gpl_string =
 
 char *help_string =
   "Usage: repl OPTION\n\n"
-  "µLisp, a simple Lisp based on Structure and Interpretation of Computer Programs.\n\n"
+  "µLisp, a Scheme based on Structure and Interpretation of Computer Programs.\n\n"
   "Initialization options:\n\n"
-  "-h\tShow this help and exit\n"
-  "-v\tShow version information and exit\n\n"
+  "-h, --help     \tShow this help and exit\n"
+  "-l, --load FILE\tImport a Scheme file\n"
+  "-v, --version  \tShow version information and exit\n\n"
   "Please report bugs to https://github.com/Seth0110/uLisp/issues\n";
 
 char *repl_help_string =
@@ -57,28 +59,44 @@ void process_repl_arg(char arg)
   case 'h':
     printf("%s", repl_help_string);
     break;
+  case 'q':
+    fputs("Goodbye!\n", stderr);
+    exit(0);
   case 'v':
     printf("%s", gpl_string);
+    break;
+  default:
+    printf("Unknown repl argument\n");
     break;
   }
 }
 
 int main(int argc, char **argv)
 {
-  if (argc == 2) {
-    if (!strcmp(argv[1], "-v"))
+  char *import_fn = NULL;
+  
+  for (int i = 1; i < argc; i++) {
+    if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--version")) {
       fprintf(stderr, "%s", gpl_string);
-    else if (!strcmp(argv[1], "-h"))
+      return 0;
+    } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
       fprintf(stderr, "%s", help_string);
-    return 0;
+      return 0;
+    } else if (!strcmp(argv[i], "-l") || !strcmp(argv[i], "--load")) {
+      import_fn = argv[++i];
+    }
   }
+
+  srand(time(0));
 
   fputs("µLisp v0.0.1\n", stderr);
   fputs("C-c to exit\n", stderr);
 
   lisp *env = the_global_environment();
+  load_file(mkStrAtom("ulisp.scm"), env);
 
-  // load_file(mkAtom("\"base.scm\""), env);
+  if (import_fn)
+    load_file(mkStrAtom(import_fn), env);
   
   while (1) {
     char *buffer = calloc(1, sizeof(char));
@@ -102,12 +120,7 @@ int main(int argc, char **argv)
       free(line);
     } while (parens(buffer) > 0);
 
-    if (!strcmp(buffer, ",q")) {
-      // TODO: Say "Goodbye!" in a random language
-      fputs("Goodbye!\n", stderr);
-      free(buffer);
-      return 0;
-    } else if (buffer[0] == ',') {
+    if (buffer[0] == ',') {
       process_repl_arg(buffer[1]);
     } else if (parens(buffer) == 0) {
       int i = 0;
